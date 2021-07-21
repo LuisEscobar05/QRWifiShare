@@ -1,7 +1,17 @@
+// import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+// import 'package:fluttertoast/fluttertoast.dart';
+// import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qr_wifi_share/constants.dart';
+// import 'package:flutter/services.dart';
+// import 'dart:async';
+// import 'dart:typed_data';
+//  import 'dart:ui' as ui;
+// import 'package:path_provider/path_provider.dart';
+import 'package:flutter/rendering.dart';
 
 class GenerateQRWifi extends StatefulWidget {
   @override
@@ -9,6 +19,11 @@ class GenerateQRWifi extends StatefulWidget {
 }
 
 class MyHomeState extends State<GenerateQRWifi> {
+  String _dataString = "QR Wifi Shared";
+  final _ssid = TextEditingController();
+  final _password = TextEditingController();
+  GlobalKey _globalKey = new GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -60,13 +75,13 @@ class MyHomeState extends State<GenerateQRWifi> {
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                   ),
+                  controller: _ssid,
                 ),
                 Padding(padding: EdgeInsets.symmetric(vertical: 4)), // 1/6
                 TextField(
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: secondaryColor,
-                    // hintText: "PASSWORD",
                     labelText: "PASSWORD",
                     labelStyle: new TextStyle(
                       color: textColor,
@@ -75,6 +90,7 @@ class MyHomeState extends State<GenerateQRWifi> {
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                   ),
+                  controller: _password,
                 ),
                 Padding(padding: EdgeInsets.symmetric(vertical: 15)), // 1/6
                 InkWell(
@@ -99,39 +115,61 @@ class MyHomeState extends State<GenerateQRWifi> {
                               color: textColor,
                             ),
                           ),
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => GenerateQRWifi(),
-                            ),
-                          ),
+                          onPressed: () => changeStateQR(),
                         ),
                       )),
                 ),
                 Padding(padding: EdgeInsets.symmetric(vertical: 25)),
-                Image.asset(
-                  'assets/qr.png',
-                  width: 120,
-                  height: 120,
-                ),
+                InkWell(
+                  child: Center(
+                    child: RepaintBoundary(
+                      key: _globalKey,
+                      child:QrImage(
+                            data: _dataString,
+                            size: 200,
+                            errorStateBuilder: (cxt, err) {
+                              return Container(
+                                child: Center(
+                                  child: Text(
+                                    "Uh oh! Something went wrong...",
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              );
+                            }) ,
+                    ),
+
+                )),
                 Padding(padding: EdgeInsets.symmetric(vertical: 15)),
                 InkWell(
-                  onTap: (){},
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Guardar QR",
-                      style: new TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: textColor,
+                    onTap: () => {},
+                    child: Container(
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Guardar QR",
+                        style: new TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: textColor,
+                        ),
                       ),
-                    ),
-                )),
+                    )),
               ],
             ),
           )),
       theme: ThemeData.dark(),
     );
   }
+
+  void changeStateQR() {
+    String fullInformation = _ssid.text + "," + _password.text;
+    setState(() {
+      this._dataString = fullInformation;
+    });
+  }
+
+
+
+
+  
 }
