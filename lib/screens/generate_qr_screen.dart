@@ -1,16 +1,12 @@
-// import 'dart:io';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-// import 'package:fluttertoast/fluttertoast.dart';
-// import 'package:image_gallery_saver/image_gallery_saver.dart';
+import '../my_toast.dart';
+
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:typed_data';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qr_wifi_share/constants.dart';
-// import 'package:flutter/services.dart';
-// import 'dart:async';
-// import 'dart:typed_data';
-//  import 'dart:ui' as ui;
-// import 'package:path_provider/path_provider.dart';
+import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 
 class GenerateQRWifi extends StatefulWidget {
@@ -23,6 +19,13 @@ class MyHomeState extends State<GenerateQRWifi> {
   final _ssid = TextEditingController();
   final _password = TextEditingController();
   GlobalKey _globalKey = new GlobalKey();
+  CustomToast toast = new CustomToast();
+  @override
+  void initState() {
+    super.initState();
+
+    _requestPermission();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -121,28 +124,29 @@ class MyHomeState extends State<GenerateQRWifi> {
                 ),
                 Padding(padding: EdgeInsets.symmetric(vertical: 25)),
                 InkWell(
-                  child: Center(
-                    child: RepaintBoundary(
-                      key: _globalKey,
-                      child:QrImage(
-                            data: _dataString,
-                            size: 200,
-                            errorStateBuilder: (cxt, err) {
-                              return Container(
-                                child: Center(
-                                  child: Text(
-                                    "Uh oh! Something went wrong...",
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              );
-                            }) ,
-                    ),
-
+                    child: Center(
+                  child: RepaintBoundary(
+                    key: _globalKey,
+                    child: QrImage(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        data: _dataString,
+                        size: 200,
+                        errorStateBuilder: (cxt, err) {
+                          return Container(
+                            child: Center(
+                              child: Text(
+                                "Uh oh! Something went wrong...",
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        }),
+                  ),
                 )),
                 Padding(padding: EdgeInsets.symmetric(vertical: 15)),
                 InkWell(
-                    onTap: () => {},
+                    onTap: () => _saveScreen(),
                     child: Container(
                       alignment: Alignment.center,
                       child: Text(
@@ -168,8 +172,31 @@ class MyHomeState extends State<GenerateQRWifi> {
     });
   }
 
+  _requestPermission() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.storage,
+    ].request();
 
+    var info = statuses[Permission.storage].toString();
+    PermissionStatus status = await Permission.storage.request();
+    if (await Permission.storage.request().isPermanentlyDenied) {
+      await openAppSettings();
+    }
+    info = status.toString();
+    toast.toastInfo(info);
+  }
 
-
-  
+  _saveScreen() async {
+    RenderRepaintBoundary boundary =
+        _globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    ui.Image image = await boundary.toImage();
+    ByteData? byteData =
+        await (image.toByteData(format: ui.ImageByteFormat.png));
+    if (byteData != null) {
+      final result =
+          await ImageGallerySaver.saveImage(byteData.buffer.asUint8List());
+      print(result);
+      toast.toastInfo("Guardado con exito en:  "+result['filePath'].toString());
+    }
+  }
 }
