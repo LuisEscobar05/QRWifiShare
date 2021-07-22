@@ -43,7 +43,7 @@ class MyHomeState extends State<GenerateQRWifi> {
             leading: new IconButton(
               icon: new Icon(Icons.arrow_back_outlined),
               onPressed: () =>
-                  Navigator.of(context).pop(), // se usa pop para regresar
+                  Navigator.of(context).pop(),
             ),
           ),
           body: Container(
